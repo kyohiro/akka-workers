@@ -7,7 +7,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.ShouldMatchers
 import akka.testkit.ImplicitSender
 import akka.testkit.TestProbe
-import com.kyohiro.akkaworker.workers.Manager
+import akkaworker.workers.Status._
+import akkaworker.workers.Manager
 
 class ManagerSpec extends TestKit(ActorSystem("ManagerSpec")) 
                  with FunSuite
@@ -22,10 +23,10 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
     val worker = TestProbe()
     
     val manager = system.actorOf(Manager.props)
-    client.send(manager, Manager.JoinClient)
-    worker.send(manager, Manager.JoinWorker)
+    client.send(manager, JoinClient)
+    worker.send(manager, JoinWorker)
     
-    client.expectMsg(Manager.Welcome)
-    worker.expectMsg(Manager.Welcome)
+    client.expectMsg(Welcome)
+    worker.expectMsg(Welcome)
   }
 }

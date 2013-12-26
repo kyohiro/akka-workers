@@ -1,33 +1,19 @@
-package com.kyohiro.akkaworker.workers
+package akkaworker.workers
+
 import akka.actor.Actor
-import com.kyohiro.akkaworker.task.Task
-import com.kyohiro.akkaworker.task.Task
 import akka.actor.ActorRef
 import akka.actor.Props
+import akkaworker.workers.Status._
+import akkaworker.task.Task
+import akka.event.Logging
+import akka.actor.ActorLogging
 
 object Manager {
-  //Worker joins
-  case object JoinWorker
-  //Client joins
-  case object JoinClient
-  //Ack welcome message
-  case object Welcome
-  //Worker ask for task
-  case object AskForTask
- 
-  //Client raise task to manager
-  case class RaiseTask(task: Task) 
-  //Manager assign task to workers
-  case class AssignTask(task: Task)
-  //Workers ack task finished message
-  case class TaskFinished(id: Long, result: Option[Any])
-  
   def props: Props = Props(new Manager())
 }
 
 
-class Manager extends Actor {
-  import Manager._
+class Manager extends Actor with ActorLogging{
   
   var workers = Set.empty[ActorRef] 
   var clients = Set.empty[ActorRef]
@@ -45,14 +31,20 @@ class Manager extends Actor {
   def receive = normal 
   
   val normal: Receive = {
-    case RaiseTask(task) => newTasks.enqueue(task)  
+    case RaiseTask(task) => {
+      newTasks.enqueue(task)
+      log.info(s"Got task $task from Client")
+    }
       
     case TaskFinished(id, result) => {
       workingTasks -= id 
       assignOneTask(sender)
     }
     
-    case AskForTask => assignOneTask(sender) 
+    case AskForTask => {
+      log.info(s"Worker $sender is asking for task")
+      assignOneTask(sender) 
+    }
                                      
     case JoinWorker => workers += sender
                        sender ! Welcome
@@ -61,13 +53,3 @@ class Manager extends Actor {
   }
 }
 
-trait SeqGenerator {
-  var _seqCounter = 0L
-  
-  def curSeq =  _seqCounter
-  
-  def nextSeq = {
-    _seqCounter += 1 
-    _seqCounter
-  }
-}
