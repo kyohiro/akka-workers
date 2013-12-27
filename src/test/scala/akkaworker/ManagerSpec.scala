@@ -29,4 +29,5 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
     client.expectMsg(Welcome)
     worker.expectMsg(Welcome)
   }
+  
 }

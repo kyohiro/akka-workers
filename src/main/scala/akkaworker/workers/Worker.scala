@@ -7,12 +7,14 @@ import scala.language.postfixOps
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits._
 import akkaworker.workers.Status._
+import akka.actor.ActorLogging
 
 object Worker {
   def props(manager: ActorRef): Props = Props(new Worker(manager))
 }
 
-class Worker(val manager: ActorRef) extends Actor {
+class Worker(val manager: ActorRef) extends Actor 
+                                    with ActorLogging {
   
   manager ! JoinWorker
   
@@ -30,7 +32,10 @@ class Worker(val manager: ActorRef) extends Actor {
   }
   
   def waitingForTask: Receive = {
-    case AskForTask => AskForTask
+    case AskForTask => {
+      manager ! AskForTask
+      checkForTask
+    } 
     case AssignTask(task) => {
       task.workOnTask onComplete { case x => sayJobFinished(task.id, x.get) } //TODO : No error handling now
       context.become(working)
@@ -38,9 +43,10 @@ class Worker(val manager: ActorRef) extends Actor {
   }
    
   def working: Receive = {
-    case AskForTask => //working, do not respond to ask for task message
+    case AskForTask => log.debug("Worker is working now, skip this task demand.") 
     case tf: TaskFinished => {
       manager ! tf
+      checkForTask
       context.become(waitingForTask)
     }
   } 
