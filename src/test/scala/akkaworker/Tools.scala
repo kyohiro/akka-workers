@@ -6,6 +6,9 @@ import ExecutionContext.Implicits.global
 import akkaworker.workers.Client
 import akka.actor.ActorRef
 import akka.actor.Props
+import akkaworker.workers.SingleBatchTaskClient
+import akka.actor.ActorLogging
+import scala.actors.PoisonPill
 
 trait Tools extends SeqGenerator{
   def getRandomTasks(num: Long) = (1L to num).map(id => SomeTask(id)).toList
@@ -39,6 +42,10 @@ object SomeClient {
   def props(manager: ActorRef): Props = Props(new SomeClient(manager))
 }
 
-class SomeClient(val manager: ActorRef) extends Client with Tools {
-  def generateTasks = getRandomTasks(10L) 
+class SomeClient(val manager: ActorRef) extends SingleBatchTaskClient with Tools with ActorLogging {
+  def produceTasks = getRandomTasks(10L) 
+  def tasksComplete = {
+    log.info("All tasks have been completed.")
+    self ! PoisonPill
+  } 
 }

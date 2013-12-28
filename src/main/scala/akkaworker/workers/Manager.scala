@@ -9,7 +9,7 @@ import akka.event.Logging
 import akka.actor.ActorLogging
 
 object Manager {
-  def props: Props = Props(new Manager())
+  def props: Props = Props(new Manager)
 }
 
 
@@ -32,15 +32,18 @@ class Manager extends Actor with ActorLogging{
   
   val normal: Receive = {
     case RaiseTask(task) => {
-      newTasks.enqueue(task)
+      newTasks += task
       log.info(s"Got task $task from Client")
     }
-      
+    case RaiseBatchTask(tasks) => {
+      newTasks ++= tasks 
+      val n = tasks.size
+      log.info(s"Got $n tasks from Client")
+    }
     case TaskFinished(id, result) => {
       workingTasks -= id 
       assignOneTask(sender)
     }
-    
     case AskForTask => {
       log.info(s"Worker $sender is asking for task")
       assignOneTask(sender) 
@@ -48,8 +51,7 @@ class Manager extends Actor with ActorLogging{
                                      
     case JoinWorker => workers += sender
                        sender ! Welcome
-    case JoinClient => clients += sender
-                       sender ! Welcome
+    case JoinClient => sender ! Welcome
   }
 }
 

@@ -1,15 +1,14 @@
 package akkaworker
 
-import akka.testkit.TestKit
-import akka.actor.ActorSystem
-import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfterAll
+import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
+
+import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
-import scala.concurrent.Await
-import akkaworker.workers.Client
-import akkaworker.workers.Status._
+import akka.testkit.TestKit
 import akka.testkit.TestProbe
+import akkaworker.workers.Status._
 
 class ClientSpec extends TestKit(ActorSystem("ClientSpec")) 
                  with FunSuite
@@ -24,7 +23,7 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
     val tasks = getRandomTasks(100) 
     val fut = tasks.map(task => task.workOnTask)
     
-    Thread.sleep(5500)
+    Thread.sleep(5000)
     
     fut.foreach(f => f.isCompleted should be (true)) 
   }
@@ -32,10 +31,18 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
   test("Manager should receive the tasks from Client") {
     val manager = TestProbe()
     val client = system.actorOf(SomeClient.props(manager.ref))
-    
-    manager.expectMsg(JoinClient)
-    manager.reply(Welcome)
-    
-    (1 to 10).map(x => manager.expectMsgClass(classOf[RaiseTask]))
+    manager.send(client, Welcome)
+    manager.expectMsgClass(classOf[RaiseBatchTask])
   }
+  
+  test("Client should quit gracefully after receiving all results") {
+    val manager = TestProbe()
+    val client = system.actorOf(SomeClient.props(manager.ref))
+    manager.send(client, Welcome)
+    manager.expectMsgClass(classOf[RaiseBatchTask])
+    
+    (1 to 10).map(id => manager.send(client, TaskFinished(id, None)))
+    manager.expectMsg(GoodBye)
+  }
+  
 }
