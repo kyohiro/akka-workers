@@ -46,6 +46,5 @@ class SomeClient(val manager: ActorRef) extends SingleBatchTaskClient with Tools
   def produceTasks = getRandomTasks(10L) 
   def tasksComplete = {
     log.info("All tasks have been completed.")
-    self ! PoisonPill
   } 
 }

@@ -23,7 +23,7 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
     val tasks = getRandomTasks(100) 
     val fut = tasks.map(task => task.workOnTask)
     
-    Thread.sleep(5000)
+    Thread.sleep(5200)
     
     fut.foreach(f => f.isCompleted should be (true)) 
   }
@@ -31,13 +31,15 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
   test("Manager should receive the tasks from Client") {
     val manager = TestProbe()
     val client = system.actorOf(SomeClient.props(manager.ref))
+    manager.expectMsg(JoinClient)
     manager.send(client, Welcome)
     manager.expectMsgClass(classOf[RaiseBatchTask])
   }
   
   test("Client should quit gracefully after receiving all results") {
     val manager = TestProbe()
-    val client = system.actorOf(SomeClient.props(manager.ref))
+    val client = system.actorOf(SomeClient.props(manager.ref), "someclient")
+    manager.expectMsg(JoinClient)
     manager.send(client, Welcome)
     manager.expectMsgClass(classOf[RaiseBatchTask])
     
