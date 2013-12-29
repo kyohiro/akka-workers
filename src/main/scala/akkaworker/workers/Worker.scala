@@ -19,25 +19,35 @@ class Worker(val manager: ActorRef) extends Actor
   
   def sayJobFinished(id: Long, result: Option[Any]) = context.self ! TaskFinished(id, result)
   
+  def askManagerForTask = {
+    manager ! AskForTask
+    context.become(waitingTaskACK)
+  }
+  
+  def workOnTask(assignedTask: AssignTask) = {
+    log.debug("Assigned task, work on it.")
+    context.become(working)
+    assignedTask.task.workOnTask onComplete { case x => sayJobFinished(assignedTask.seq, x.get) } //TODO : No error handling now
+  }
+  
   //starting in not connected status
   def receive = notConnected 
   
   def notConnected: Receive = {
-    case Welcome => {
-      manager ! AskForTask 
-      context.become(waitingForTask)
-    }
+    case Welcome => askManagerForTask
   }
   
   def waitingForTask: Receive = {
-    case TaskAvailable => {
-      manager ! AskForTask
-    }
-    case AssignTask(task) => {
-      task.workOnTask onComplete { case x => sayJobFinished(task.id, x.get) } //TODO : No error handling now
-      context.become(working)
-    } 
+    case TaskAvailable => askManagerForTask 
+    case assignedTask: AssignTask => workOnTask(assignedTask) 
   }
+  
+  def waitingTaskACK: Receive = {
+    case NoTaskAvailable => {
+      context.become(waitingForTask)
+    }
+    case assignedTask: AssignTask => workOnTask(assignedTask)
+  } 
    
   def working: Receive = {
     case tf: TaskFinished => {

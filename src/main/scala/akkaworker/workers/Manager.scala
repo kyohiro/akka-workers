@@ -9,47 +9,65 @@ import akka.event.Logging
 import akka.actor.ActorLogging
 
 object Manager {
+  case class TaskSeq(seq: Long, task: Task, client: ActorRef)
   def props: Props = Props(new Manager)
 }
 
 class Manager extends Actor 
-              with ActorLogging {
+              with ActorLogging 
+              with SeqGenerator {
+  import Manager._
   
   var workers = Set.empty[ActorRef] 
-  var workingTasks = scala.collection.mutable.HashMap.empty[Long, Task]
-  var newTasks = scala.collection.mutable.Queue.empty[Task]
+  val newTasks = scala.collection.mutable.Queue.empty[TaskSeq]
+  val tasksMap = scala.collection.mutable.HashMap.empty[Long, TaskSeq]
   
-  def getFirstTask: Option[Task] = if (newTasks.isEmpty) None else Some(newTasks.dequeue)
+  def enqueTask(task: Task) = {
+    val seq = nextSeq
+    val taskSeq = TaskSeq(seq, task, sender)
+    tasksMap += seq -> taskSeq
+    newTasks += taskSeq
+  }
   
-  def assignOneTask(worker: ActorRef) = getFirstTask.map(task => {
-    worker ! AssignTask(task)
-    workingTasks += task.id -> task
-  })
+  def getFirstTask: Option[TaskSeq] = if (newTasks.isEmpty) None else Some(newTasks.dequeue)
+  
+  def assignOneTask(worker: ActorRef) = getFirstTask match {
+    case Some(task) => worker ! AssignTask(task.seq, task.task)
+    case None => worker ! NoTaskAvailable
+    
+  }
  
   def receive = normal 
   
   val normal: Receive = {
     case RaiseTask(task) => {
-      newTasks += task
-      log.debug(s"Got task $task from Client")
+      enqueTask(task) 
       workers.map(_ ! TaskAvailable)
+      
+      log.info("Got task {} from Client {}, totally {} tasks inbox now.", task, sender, newTasks.size)
+      log.info("Broadcast Task Available message")
     }
     
     case RaiseBatchTask(tasks) => {
-      newTasks ++= tasks 
-      val n = tasks.size
-      log.debug(s"Got $n tasks from Client")
+      tasks.map(enqueTask(_))
       workers.map(_ ! TaskAvailable)
+      
+      log.info("Got {} tasks from Client {}, totally {} tasks inbox now.", tasks.size, sender, newTasks.size)
+      log.info("Broadcast Task Available")
     }
     
-    case TaskFinished(id, result) => {
-      workingTasks -= id 
+    case TaskFinished(seq, result) => {
+      val taskSeq = tasksMap.get(seq) 
+      tasksMap -= seq
+      taskSeq.map(ts => ts.client ! TaskComplete(ts.task.id, result))
       assignOneTask(sender)
+      
+      log.debug(s"$sender finished task $seq, try assigning another one.")
     }
     
     case AskForTask => {
-      log.debug(s"Worker $sender is asking for task")
       assignOneTask(sender) 
+      log.debug(s"Worker $sender is asking for task")
     }
                                      
     case JoinWorker => {
@@ -58,6 +76,8 @@ class Manager extends Actor
     }
     case JoinClient => sender ! Welcome
   }
+  
+  var cnt = 0
 }
 
 trait SeqGenerator {

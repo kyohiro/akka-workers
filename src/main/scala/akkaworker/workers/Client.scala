@@ -3,18 +3,20 @@ package akkaworker.workers
 import akka.actor.{Actor, ActorRef}
 import akkaworker.task.Task
 import akka.actor.PoisonPill
+import akka.actor.ActorLogging
 
 /**
  * Client will send tasks to the manager and wait for results. 
  */
-trait Client extends Actor {
+trait Client extends Actor 
+             with ActorLogging {
   import Status._
   
   //to be implemented
   def dispatchTasks: Unit
   
   //to be implemented
-  def processResult(tf: TaskFinished): Unit
+  def processResult(tf: TaskComplete): Unit
   
   //to be implemented
   def tasksComplete: Unit
@@ -34,7 +36,7 @@ trait Client extends Actor {
   }
   
   def tasksSent: Receive = {
-    case tf: TaskFinished => {
+    case tf: TaskComplete => {
       processResult(tf)  
     } 
   }
@@ -60,11 +62,12 @@ trait SingleBatchTaskClient extends Client {
     manager ! RaiseBatchTask(tasks)
   }
   
-  def processResult(tf: TaskFinished) = {
+  def processResult(tf: TaskComplete) = {
     results += tf.id -> tf.result
     tasksSet -= tf.id
     if (tasksSet.isEmpty) {
       tasksComplete 
+      log.info("All tasks has been finished. Closing this Client.")
       manager ! GoodBye
       self ! PoisonPill
     }

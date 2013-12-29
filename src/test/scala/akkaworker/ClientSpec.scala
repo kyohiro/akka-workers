@@ -43,7 +43,7 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
     manager.send(client, Welcome)
     manager.expectMsgClass(classOf[RaiseBatchTask])
     
-    (1 to 10).map(id => manager.send(client, TaskFinished(id, None)))
+    (1 to 10).map(id => manager.send(client, TaskComplete(id, None)))
     manager.expectMsg(GoodBye)
   }
   
