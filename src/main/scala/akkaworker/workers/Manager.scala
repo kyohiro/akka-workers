@@ -63,6 +63,8 @@ class Manager extends Actor
       assignOneTask(sender)
       
       log.debug(s"$sender finished task $seq, try assigning another one.")
+      cnt += 1
+      log.debug("Finished {} tasks in total", cnt)
     }
     
     case AskForTask => {

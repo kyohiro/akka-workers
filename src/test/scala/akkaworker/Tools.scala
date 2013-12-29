@@ -47,7 +47,7 @@ object MillionsTaskClient {
 }
 
 class MillionsTasksClient(val manager: ActorRef) extends SingleBatchTaskClient with Tools {
-  def produceTasks = getRandomTasks(5L, timeLimit = 100) 
+  def produceTasks = getRandomTasks(3000L, timeLimit = 100) 
   def tasksComplete = {
     log.info("All tasks have been completed.")
   }
