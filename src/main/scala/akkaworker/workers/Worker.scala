@@ -15,27 +15,24 @@ object Worker {
 
 class Worker(val manager: ActorRef) extends Actor 
                                     with ActorLogging {
-  
   manager ! JoinWorker
-  
-  def checkForTask = context.system.scheduler.scheduleOnce(1000 millis, context.self, AskForTask)
   
   def sayJobFinished(id: Long, result: Option[Any]) = context.self ! TaskFinished(id, result)
   
+  //starting in not connected status
   def receive = notConnected 
   
   def notConnected: Receive = {
     case Welcome => {
-      checkForTask
+      manager ! AskForTask 
       context.become(waitingForTask)
     }
   }
   
   def waitingForTask: Receive = {
-    case AskForTask => {
+    case TaskAvailable => {
       manager ! AskForTask
-      checkForTask
-    } 
+    }
     case AssignTask(task) => {
       task.workOnTask onComplete { case x => sayJobFinished(task.id, x.get) } //TODO : No error handling now
       context.become(working)
@@ -43,10 +40,8 @@ class Worker(val manager: ActorRef) extends Actor
   }
    
   def working: Receive = {
-    case AskForTask => log.debug("Worker is working now, skip this task demand.") 
     case tf: TaskFinished => {
       manager ! tf
-      checkForTask
       context.become(waitingForTask)
     }
   } 
