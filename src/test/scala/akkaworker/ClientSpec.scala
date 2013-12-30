@@ -19,11 +19,11 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
 
   override def afterAll(): Unit = system.shutdown()
   
-  test("Random tasks should finish in 0 to 5 seconds") {
+  test("Random tasks should finish in 0 to 1 seconds") {
     val tasks = getRandomTasks(100) 
     val fut = tasks.map(task => task.workOnTask)
     
-    Thread.sleep(5200)
+    Thread.sleep(500)
     
     fut.foreach(f => f.isCompleted should be (true)) 
   }

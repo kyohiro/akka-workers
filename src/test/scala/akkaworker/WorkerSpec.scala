@@ -31,6 +31,8 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     val worker1 = TestProbe()
     val worker2 = TestProbe() 
     
+    Thread.sleep(200) //Give some time to ensure workers join after client gives tasks
+    
     worker1.send(manager, JoinWorker)
     worker1.expectMsg(Welcome)
     worker2.send(manager, JoinWorker)
@@ -65,7 +67,9 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     val client2 = system.actorOf(MillionsTaskClient.props(manager), "client2")
     val client3 = system.actorOf(MillionsTaskClient.props(manager), "client3")
     
-    val workers = (1 to 2048).map(n => system.actorOf(Worker.props(manager))).toList
+    Thread.sleep(200)
+    
+    val workers = (1 to 1024).map(n => system.actorOf(Worker.props(manager))).toList
     
     Thread.sleep(4000)
     
@@ -81,11 +85,11 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     
     val workers1 = (1 to 1024).map(n => system.actorOf(Worker.props(manager))).toList
     Thread.sleep(500)
-    //val client3 = system.actorOf(MillionsTaskClient.props(manager), "client6")
+    val client3 = system.actorOf(MillionsTaskClient.props(manager), "client6")
     Thread.sleep(3000)
     client1.isTerminated should be (true)
     client2.isTerminated should be (true)
-    //client3.isTerminated should be (true)
+    client3.isTerminated should be (true)
   }
   
 }
