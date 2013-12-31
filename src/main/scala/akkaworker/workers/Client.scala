@@ -19,6 +19,9 @@ trait Client extends Actor
   def processResult(tf: TaskComplete): Unit
   
   //to be implemented
+  def processFailure(tf: TaskFailed): Unit
+  
+  //to be implemented
   def tasksComplete: Unit
   
   val manager: ActorRef
@@ -36,11 +39,9 @@ trait Client extends Actor
   }
   
   def tasksSent: Receive = {
-    case tf: TaskComplete => {
-      processResult(tf)  
-    } 
+    case tc: TaskComplete => processResult(tc)  
+    case tf: TaskFailed => processFailure(tf)
   }
-  
 }
 
 /**
@@ -62,14 +63,21 @@ trait SingleBatchTaskClient extends Client {
     manager ! RaiseBatchTask(tasks)
   }
   
+  def allTasksDone = if (tasksSet.isEmpty) {
+    tasksComplete 
+    log.info("All tasks has been finished. Closing this Client.")
+    manager ! GoodBye
+    self ! PoisonPill
+  }
+  
   def processResult(tf: TaskComplete) = {
     results += tf.id -> tf.result
     tasksSet -= tf.id
-    if (tasksSet.isEmpty) {
-      tasksComplete 
-      log.info("All tasks has been finished. Closing this Client.")
-      manager ! GoodBye
-      self ! PoisonPill
-    }
+    allTasksDone 
+  }
+  
+  def processFailure(tf: TaskFailed) = {
+    tasksSet -= tf.seq
+    allTasksDone
   }
 }

@@ -14,21 +14,23 @@ import akkaworker.workers.Worker
 import scala.annotation.tailrec
 
 trait Tools extends SeqGenerator{
-  def getRandomTasks(num: Long, timeLimit: Int = 50000000) = (1L to num).map(id => SomeTask(id, timeLimit)).toList
-  
+  def getRandomTasks(num: Long, timeLimit: Int = 50000000, failRate: Int = 0) = (1L to num).map(id => SomeTask(id, timeLimit, failRate)).toList
 }
 
 object SomeTask {
-  def apply(id: Long, timeLimit: Int) = new SomeTask(id, timeLimit)
+  def apply(id: Long, timeLimit: Int, failRate: Int = 0) = new SomeTask(id, timeLimit, failRate)
 }
 
-class SomeTask(val id: Long, timeLimit: Int) extends Task {
+class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task {
   @tailrec
   private def calc(n: Int, acc: Int): Int = if (n == 0) 1 else calc(n-1, acc+1)
   def workOnTask = {
     val blockingTime = (Math.random() * timeLimit).toInt + 100000000
     val p = Promise[Option[Int]]
-    future {calc(blockingTime, 0)} onComplete {case _ => p.success(Some(blockingTime))} 
+    val failed = Math.random() * failureRate
+    val f = future {if(failed < 50) calc(blockingTime, 0) else throw new Exception("Calc failed") } 
+    f onSuccess {case x => p.success(Some(blockingTime))} 
+    f onFailure {case x => p.failure(x)}
     p.future
   }
 }
@@ -51,6 +53,17 @@ object MillionsTaskClient {
 
 class MillionsTasksClient(val manager: ActorRef) extends SingleBatchTaskClient with Tools {
   def produceTasks = getRandomTasks(5000L, timeLimit = 100) 
+  def tasksComplete = {
+    log.info("All tasks have been completed.")
+  }
+}
+
+object FailureTaskClient {
+  def props(manager: ActorRef): Props = Props(new FailureTaskClient(manager))
+}
+
+class FailureTaskClient(val manager: ActorRef) extends SingleBatchTaskClient with Tools {
+  def produceTasks = getRandomTasks(100L, timeLimit = 100, failRate = 100)
   def tasksComplete = {
     log.info("All tasks have been completed.")
   }

@@ -27,7 +27,10 @@ class Worker(val manager: ActorRef) extends Actor
   def workOnTask(assignedTask: AssignTask) = {
     log.debug("Assigned task, work on it.")
     context.become(working)
-    assignedTask.task.workOnTask onComplete { case x => sayJobFinished(assignedTask.seq, x.get) } //TODO : No error handling now
+    val f = assignedTask.task.workOnTask 
+    f onSuccess { case x => sayJobFinished(assignedTask.seq, x) } 
+    f onFailure { case x => log.warning(x.getStackTraceString)
+                            manager ! TaskFailed(assignedTask.seq) } 
   }
   
   //starting in not connected status

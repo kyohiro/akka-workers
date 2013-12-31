@@ -92,4 +92,15 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     client3.isTerminated should be (true)
   }
   
+  test("Worker should respond task failure to client correctly") {
+    val manager = system.actorOf(Manager.props, "manager3")
+    val client = system.actorOf(FailureTaskClient.props(manager), "client7") 
+    
+    val workers = (1 to 128).map(n => system.actorOf(Worker.props(manager))).toList
+    
+    Thread.sleep(2000)
+    client.isTerminated should be (true)
+    
+  }
+  
 }

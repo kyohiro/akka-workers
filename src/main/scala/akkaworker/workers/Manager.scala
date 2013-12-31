@@ -35,6 +35,8 @@ class Manager extends Actor
     case Some(task) => worker ! AssignTask(task.seq, task.task); log.debug("Assigned task {} to {}", task.seq, worker)
     case None => worker ! NoTaskAvailable
   }
+  
+  def tellTaskAvail = if (!newTasks.isEmpty) sender ! TaskAvailable
  
   def receive = normal 
   
@@ -61,7 +63,16 @@ class Manager extends Actor
       taskSeq.map(ts => ts.client ! TaskComplete(ts.task.id, result))
       log.debug(s"$sender finished task $seq")
       
-      if (!newTasks.isEmpty) sender ! TaskAvailable
+      tellTaskAvail
+    }
+    
+    case TaskFailed(seq: Long) => {
+      val taskSeq = tasksMap.get(seq) 
+      tasksMap -= seq
+      taskSeq.map(ts => ts.client ! TaskFailed(ts.task.id))
+      log.debug(s"$sender failed task $seq")
+       
+      tellTaskAvail
     }
     
     case AskForTask => {
