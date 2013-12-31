@@ -32,9 +32,8 @@ class Manager extends Actor
   def getFirstTask: Option[TaskSeq] = if (newTasks.isEmpty) None else Some(newTasks.dequeue)
   
   def assignOneTask(worker: ActorRef) = getFirstTask match {
-    case Some(task) => worker ! AssignTask(task.seq, task.task)
+    case Some(task) => worker ! AssignTask(task.seq, task.task); log.debug("Assigned task {} to {}", task.seq, worker)
     case None => worker ! NoTaskAvailable
-    
   }
  
   def receive = normal 
@@ -60,11 +59,9 @@ class Manager extends Actor
       val taskSeq = tasksMap.get(seq) 
       tasksMap -= seq
       taskSeq.map(ts => ts.client ! TaskComplete(ts.task.id, result))
-      assignOneTask(sender)
+      log.debug(s"$sender finished task $seq")
       
-      log.debug(s"$sender finished task $seq, try assigning another one.")
-      cnt += 1
-      log.debug("Finished {} tasks in total", cnt)
+      if (!newTasks.isEmpty) sender ! TaskAvailable
     }
     
     case AskForTask => {

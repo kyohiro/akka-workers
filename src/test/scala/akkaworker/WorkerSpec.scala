@@ -46,9 +46,9 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     worker2.expectMsgClass(classOf[AssignTask])
     
     worker1.reply(TaskFinished(1L, None))
-    worker1.expectMsgClass(classOf[AssignTask])
+    worker1.expectMsg(TaskAvailable)
     worker2.reply(TaskFinished(2L, Some(5L)))
-    worker2.expectMsgClass(classOf[AssignTask])  
+    worker2.expectMsg(TaskAvailable)
   }
 
   test("Workers should handles amounts of small tasks quickly") {
@@ -83,10 +83,10 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     val client1 = system.actorOf(MillionsTaskClient.props(manager), "client4") 
     val client2 = system.actorOf(MillionsTaskClient.props(manager), "client5")
     
-    val workers1 = (1 to 1024).map(n => system.actorOf(Worker.props(manager))).toList
+    val workers1 = (1 to 512).map(n => system.actorOf(Worker.props(manager))).toList
     Thread.sleep(500)
     val client3 = system.actorOf(MillionsTaskClient.props(manager), "client6")
-    Thread.sleep(3000)
+    Thread.sleep(4000)
     client1.isTerminated should be (true)
     client2.isTerminated should be (true)
     client3.isTerminated should be (true)

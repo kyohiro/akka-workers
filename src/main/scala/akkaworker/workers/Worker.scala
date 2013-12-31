@@ -43,9 +43,7 @@ class Worker(val manager: ActorRef) extends Actor
   }
   
   def waitingTaskACK: Receive = {
-    case NoTaskAvailable => {
-      context.become(waitingForTask)
-    }
+    case NoTaskAvailable => context.become(waitingForTask)
     case assignedTask: AssignTask => workOnTask(assignedTask)
   } 
    
@@ -54,5 +52,7 @@ class Worker(val manager: ActorRef) extends Actor
       manager ! tf
       context.become(waitingForTask)
     }
+    case a: Any => log.warning("unexpected message, {}", a)
+    
   } 
 }

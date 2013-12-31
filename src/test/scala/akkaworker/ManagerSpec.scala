@@ -45,7 +45,7 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
     worker.reply(AskForTask)
     worker.expectMsgClass(classOf[AssignTask])
     worker.reply(TaskFinished(1, None))
-    worker.expectMsgClass(classOf[AssignTask])
+    worker.expectMsg(TaskAvailable)
   }
   
   test("Manager should tell workers task available when clients join") {
@@ -62,7 +62,7 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
     worker.reply(AskForTask)
     worker.expectMsgClass(classOf[AssignTask])
     worker.reply(TaskFinished(1, None))
-    worker.expectMsgClass(classOf[AssignTask])
+    worker.expectMsg(TaskAvailable)
   }
   
 }

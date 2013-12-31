@@ -19,4 +19,5 @@ object Status {
   case class AssignTask(seq: Long, task: Task) extends Operation                    //Manager assign task to a worker
   case class TaskFinished(seq: Long, result: Option[Any]) extends OperationReply    //Worker says task has been finished
   case class TaskComplete(id: Long, result: Option[Any]) extends OperationReply     //Manager tells client task has been finished
+  case class TaskFailed(seq: Long) extends OperationReply                           //Task failed or cannot be done by this worker
 }
