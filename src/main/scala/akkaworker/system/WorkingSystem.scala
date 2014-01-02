@@ -5,11 +5,21 @@ import akkaworker.workers.Manager
 import akkaworker.workers.Worker
 import akka.actor.ActorRef
 import akka.actor.Props
+import scala.collection.immutable.Set
 
-
-class WorkingSystem(systemName: String, managerProp: Props, workerProp: Props, workersCount: Int){
-  val system = ActorSystem(systemName) 
-  val manager = system.actorOf(managerProp)
-  val workers = for (idx <- 1 to workersCount) yield system.actorOf(workerProp)
+trait WorkingSystem {
+  val systemName: String
   
+  val system = ActorSystem(systemName)
+  
+  var workers: Set[ActorRef] 
+  
+  var clients: Set[ActorRef]
+  
+  //to be implemented
+  def clientJoin(clientProp: Props)
+  
+  def shutdown = system.shutdown()
+  
+  def allClientsClosed = clients.forall(_.isTerminated)
 }

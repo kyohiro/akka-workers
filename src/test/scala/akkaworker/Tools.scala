@@ -48,10 +48,10 @@ class SomeClient extends SingleBatchTaskClient with Tools {
 }
 
 object MillionsTaskClient {
-  def props: Props = Props(new MillionsTasksClient)
+  def props: Props = Props(new MillionsTaskClient)
 }
 
-class MillionsTasksClient extends SingleBatchTaskClient with Tools {
+class MillionsTaskClient extends SingleBatchTaskClient with Tools {
   def produceTasks = getRandomTasks(5000L, timeLimit = 100) 
   def tasksComplete = {
     log.info("All tasks have been completed.")
