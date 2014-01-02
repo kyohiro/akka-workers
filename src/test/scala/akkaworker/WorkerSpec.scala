@@ -27,10 +27,11 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
   
   test("Worker should receive tasks from manager") {
     val manager = system.actorOf(Manager.props) 
-    val client = system.actorOf(SomeClient.props(manager))
+    val client = system.actorOf(SomeClient.props)
     val worker1 = TestProbe()
     val worker2 = TestProbe() 
     
+    client ! StartClient(manager)
     Thread.sleep(200) //Give some time to ensure workers join after client gives tasks
     
     worker1.send(manager, JoinWorker)
@@ -53,7 +54,8 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
 
   test("Workers should handles amounts of small tasks quickly") {
     val manager = system.actorOf(Manager.props) 
-    val client = system.actorOf(MillionsTaskClient.props(manager))
+    val client = system.actorOf(MillionsTaskClient.props)
+    client ! StartClient(manager)
     
     val workers = (1 to 1024).map(n => system.actorOf(Worker.props(manager))).toList
     
@@ -63,10 +65,13 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
   
   test("Multiple clients should work with manager and workers in concert") {
     val manager = system.actorOf(Manager.props, "manager") 
-    val client1 = system.actorOf(MillionsTaskClient.props(manager), "client1") 
-    val client2 = system.actorOf(MillionsTaskClient.props(manager), "client2")
-    val client3 = system.actorOf(MillionsTaskClient.props(manager), "client3")
+    val client1 = system.actorOf(MillionsTaskClient.props, "client1") 
+    val client2 = system.actorOf(MillionsTaskClient.props, "client2")
+    val client3 = system.actorOf(MillionsTaskClient.props, "client3")
     
+    client1 ! StartClient(manager)
+    client2 ! StartClient(manager)
+    client3 ! StartClient(manager)
     Thread.sleep(200)
     
     val workers = (1 to 1024).map(n => system.actorOf(Worker.props(manager))).toList
@@ -80,12 +85,15 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
   
   test("Order of joining of client or worker should not matter") {
     val manager = system.actorOf(Manager.props, "manager2")
-    val client1 = system.actorOf(MillionsTaskClient.props(manager), "client4") 
-    val client2 = system.actorOf(MillionsTaskClient.props(manager), "client5")
+    val client1 = system.actorOf(MillionsTaskClient.props, "client4") 
+    val client2 = system.actorOf(MillionsTaskClient.props, "client5")
+    client1 ! StartClient(manager)
+    client2 ! StartClient(manager)
     
     val workers1 = (1 to 512).map(n => system.actorOf(Worker.props(manager))).toList
     Thread.sleep(500)
-    val client3 = system.actorOf(MillionsTaskClient.props(manager), "client6")
+    val client3 = system.actorOf(MillionsTaskClient.props, "client6")
+    client3 ! StartClient(manager)
     Thread.sleep(4000)
     client1.isTerminated should be (true)
     client2.isTerminated should be (true)
@@ -95,6 +103,7 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
   test("Worker should respond task failure to client correctly") {
     val manager = system.actorOf(Manager.props, "manager3")
     val client = system.actorOf(FailureTaskClient.props(manager), "client7") 
+    client ! StartClient(manager)
     
     val workers = (1 to 128).map(n => system.actorOf(Worker.props(manager))).toList
     

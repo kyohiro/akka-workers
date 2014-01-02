@@ -34,8 +34,9 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
   
   test("Manager should send tasks to workers when they have tasks") {
     val manager = system.actorOf(Manager.props) 
-    val client = system.actorOf(SomeClient.props(manager)) 
+    val client = system.actorOf(SomeClient.props) 
     
+    client ! StartClient(manager)
     Thread.sleep(200)
     
     val worker = TestProbe()
@@ -57,7 +58,9 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
     
     worker.expectNoMsg(1 second)
    
-    val client = system.actorOf(SomeClient.props(manager)) 
+    val client = system.actorOf(SomeClient.props) 
+    client ! StartClient(manager)
+    
     worker.expectMsg(TaskAvailable)
     worker.reply(AskForTask)
     worker.expectMsgClass(classOf[AssignTask])

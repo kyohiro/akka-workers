@@ -37,10 +37,10 @@ class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task {
 
 
 object SomeClient {
-  def props(manager: ActorRef): Props = Props(new SomeClient(manager))
+  def props: Props = Props(new SomeClient)
 }
 
-class SomeClient(val manager: ActorRef) extends SingleBatchTaskClient with Tools { 
+class SomeClient extends SingleBatchTaskClient with Tools { 
   def produceTasks = getRandomTasks(10L) 
   def tasksComplete = {
     log.info("All tasks have been completed.")
@@ -48,10 +48,10 @@ class SomeClient(val manager: ActorRef) extends SingleBatchTaskClient with Tools
 }
 
 object MillionsTaskClient {
-  def props(manager: ActorRef): Props = Props(new MillionsTasksClient(manager))
+  def props: Props = Props(new MillionsTasksClient)
 }
 
-class MillionsTasksClient(val manager: ActorRef) extends SingleBatchTaskClient with Tools {
+class MillionsTasksClient extends SingleBatchTaskClient with Tools {
   def produceTasks = getRandomTasks(5000L, timeLimit = 100) 
   def tasksComplete = {
     log.info("All tasks have been completed.")
@@ -59,10 +59,10 @@ class MillionsTasksClient(val manager: ActorRef) extends SingleBatchTaskClient w
 }
 
 object FailureTaskClient {
-  def props(manager: ActorRef): Props = Props(new FailureTaskClient(manager))
+  def props(manager: ActorRef): Props = Props(new FailureTaskClient)
 }
 
-class FailureTaskClient(val manager: ActorRef) extends SingleBatchTaskClient with Tools {
+class FailureTaskClient extends SingleBatchTaskClient with Tools {
   def produceTasks = getRandomTasks(100L, timeLimit = 100, failRate = 100)
   def tasksComplete = {
     log.info("All tasks have been completed.")

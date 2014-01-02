@@ -1,6 +1,7 @@
 package akkaworker.workers
 
 import akkaworker.task.Task
+import akka.actor.ActorRef
 
 object Status {
   sealed trait Message
@@ -14,6 +15,7 @@ object Status {
  
   sealed trait Operation
   sealed trait OperationReply
+  case class StartClient(manager: ActorRef) extends Operation                       //Tell client which manager to connect to
   case class RaiseTask(task: Task) extends Operation                                //Client raise task to Manager
   case class RaiseBatchTask(tasks: Iterable[Task]) extends Operation                //Client raise a batch of tasks
   case class AssignTask(seq: Long, task: Task) extends Operation                    //Manager assign task to a worker

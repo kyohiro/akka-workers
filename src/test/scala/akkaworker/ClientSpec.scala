@@ -30,7 +30,8 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
   
   test("Manager should receive the tasks from Client") {
     val manager = TestProbe()
-    val client = system.actorOf(SomeClient.props(manager.ref))
+    val client = system.actorOf(SomeClient.props)
+    client ! StartClient(manager.ref)
     manager.expectMsg(JoinClient)
     manager.send(client, Welcome)
     manager.expectMsgClass(classOf[RaiseBatchTask])
@@ -38,7 +39,8 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
   
   test("Client should quit gracefully after receiving all results") {
     val manager = TestProbe()
-    val client = system.actorOf(SomeClient.props(manager.ref), "someclient")
+    val client = system.actorOf(SomeClient.props, "someclient")
+    client ! StartClient(manager.ref)
     manager.expectMsg(JoinClient)
     manager.send(client, Welcome)
     manager.expectMsgClass(classOf[RaiseBatchTask])

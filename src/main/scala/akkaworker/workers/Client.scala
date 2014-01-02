@@ -24,13 +24,19 @@ trait Client extends Actor
   //to be implemented
   def tasksComplete: Unit
   
-  val manager: ActorRef
-  manager !  JoinClient
+  var manager: ActorRef = null
   
   //Starting in not connected status
   def receive = notConnected
   
   def notConnected: Receive = {
+    case StartClient(mgr: ActorRef) => {
+      if (mgr eq null) log.error("Manager conntected to should not be null!")
+      else {
+        manager = mgr 
+        manager !  JoinClient
+      }
+    }
     //Dispatch tasks and wait for responses
     case Welcome => {
       dispatchTasks
