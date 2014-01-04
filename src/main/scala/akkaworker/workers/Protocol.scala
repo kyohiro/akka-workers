@@ -3,7 +3,7 @@ package akkaworker.workers
 import akkaworker.task.Task
 import akka.actor.ActorRef
 
-object Status {
+object Protocol {
   sealed trait Message
   case object JoinWorker extends Message     //Worker tells Manager to join
   case object JoinClient extends Message     //Client tells Manager to join

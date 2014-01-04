@@ -1,13 +1,9 @@
 package akkaworker.workers
 
-import akka.actor.Actor
-import akka.actor.ActorRef
-import akka.actor.Props
-import akkaworker.workers.Status._
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akkaworker.task.Task
-import akka.event.Logging
-import akka.actor.ActorLogging
-
+import akkaworker.workers.Protocol.
+_
 object Manager {
   case class TaskSeq(seq: Long, task: Task, client: ActorRef)
   def props: Props = Props(new Manager)

@@ -12,7 +12,7 @@ import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
 import akkaworker.workers.Manager
-import akkaworker.workers.Status._
+import akkaworker.workers.Protocol._
 import akkaworker.workers.Worker
 
 

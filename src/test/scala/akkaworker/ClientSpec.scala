@@ -8,7 +8,7 @@ import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import akkaworker.workers.Status._
+import akkaworker.workers.Protocol._
 
 class ClientSpec extends TestKit(ActorSystem("ClientSpec")) 
                  with FunSuite

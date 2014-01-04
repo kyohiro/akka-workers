@@ -1,20 +1,16 @@
 package akkaworker.workers
 
-import akka.actor.Actor
-import akka.actor.Props
-import akka.actor.ActorRef
-import scala.language.postfixOps
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits._
-import akkaworker.workers.Status._
-import akka.actor.ActorLogging
+import akkaworker.workers.Protocol._
 
 object Worker {
   def props: Props = Props(new Worker)
 }
 
 class Worker extends Actor 
-                                    with ActorLogging {
+                     with ActorLogging {
   var manager: ActorRef = null 
   
   def sayJobFinished(id: Long, result: Option[Any]) = context.self ! TaskFinished(id, result)

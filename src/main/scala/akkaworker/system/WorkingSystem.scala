@@ -1,20 +1,15 @@
 package akkaworker.system
 
-import akka.actor.ActorSystem
-import akkaworker.workers.Manager
-import akkaworker.workers.Worker
-import akka.actor.ActorRef
-import akka.actor.Props
-import scala.collection.immutable.Set
+import akka.actor.{ActorRef, ActorSystem, Props}
 
 trait WorkingSystem {
   val systemName: String
   
   val system = ActorSystem(systemName)
   
-  var workers: Set[ActorRef] 
+  var workers = Set.empty[ActorRef]
   
-  var clients: Set[ActorRef]
+  var clients = Set.empty[ActorRef]
   
   //to be implemented
   def clientJoin(clientProp: Props)

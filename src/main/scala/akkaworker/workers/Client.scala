@@ -1,16 +1,14 @@
 package akkaworker.workers
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, PoisonPill, ActorLogging}
 import akkaworker.task.Task
-import akka.actor.PoisonPill
-import akka.actor.ActorLogging
 
 /**
  * Client will send tasks to the manager and wait for results. 
  */
 trait Client extends Actor 
              with ActorLogging {
-  import Status._
+  import Protocol._
   
   //to be implemented
   def dispatchTasks: Unit
@@ -55,7 +53,7 @@ trait Client extends Actor
  * After all the results return, the client can be closed.
  */
 trait SingleBatchTaskClient extends Client {
-  import Status._
+  import Protocol._
   
   //to be implemented
   def produceTasks: Iterable[Task]
