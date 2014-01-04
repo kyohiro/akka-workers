@@ -57,7 +57,8 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     val client = system.actorOf(MillionsTaskClient.props)
     client ! StartClient(manager)
     
-    val workers = (1 to 1024).map(n => system.actorOf(Worker.props(manager))).toList
+    val workers = (1 to 1024).map(n => system.actorOf(Worker.props)).toList
+    workers.foreach(w => w ! StartWorker(manager))
     
     Thread.sleep(4000)
     client.isTerminated should be (true)
@@ -74,7 +75,8 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     client3 ! StartClient(manager)
     Thread.sleep(200)
     
-    val workers = (1 to 1024).map(n => system.actorOf(Worker.props(manager))).toList
+    val workers = (1 to 1024).map(n => system.actorOf(Worker.props)).toList
+    workers.foreach(w => w ! StartWorker(manager))
     
     Thread.sleep(4000)
     
@@ -90,7 +92,8 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     client1 ! StartClient(manager)
     client2 ! StartClient(manager)
     
-    val workers1 = (1 to 512).map(n => system.actorOf(Worker.props(manager))).toList
+    val workers1 = (1 to 512).map(n => system.actorOf(Worker.props)).toList
+    workers1.foreach(w => w ! StartWorker(manager))
     Thread.sleep(500)
     val client3 = system.actorOf(MillionsTaskClient.props, "client6")
     client3 ! StartClient(manager)
@@ -105,7 +108,8 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
     val client = system.actorOf(FailureTaskClient.props(manager), "client7") 
     client ! StartClient(manager)
     
-    val workers = (1 to 128).map(n => system.actorOf(Worker.props(manager))).toList
+    val workers = (1 to 128).map(n => system.actorOf(Worker.props)).toList
+    workers.foreach(w => w ! StartWorker(manager))
     
     Thread.sleep(2000)
     client.isTerminated should be (true)

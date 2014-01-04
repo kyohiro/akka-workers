@@ -19,6 +19,9 @@ trait WorkingSystem {
   //to be implemented
   def clientJoin(clientProp: Props)
   
+  //to be implemented
+  def workerJoin(workerProp: Props)
+  
   def shutdown = system.shutdown()
   
   def allClientsClosed = clients.forall(_.isTerminated)

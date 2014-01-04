@@ -1,28 +1,37 @@
 package akkaworker.system
 
+import akka.actor.{ActorRef, Props}
 import akkaworker.workers.Manager
-import akka.actor.ActorRef
-import akkaworker.workers.Worker
-import akka.actor.Props
 import akkaworker.workers.Status._
+import akkaworker.workers.Worker
 
-class SingleManagerSystem(val systemName: String, workerCount: Int) extends WorkingSystem {
-  require(workerCount > 0, "Should have at least one worker")
+class SingleManagerSystem(val systemName: String) extends WorkingSystem {
   
   val manager = system.actorOf(Manager.props, "Manager")
-  var workers = (for (i <- 0 to workerCount - 1) yield system.actorOf(Worker.props(manager), "Worker" + i)) toSet
+  var workers = Set.empty[ActorRef]
   var clients = Set.empty[ActorRef]
   
   def clientJoin(clientProp: Props) = {
-    val count = clients.size
-    val client = system.actorOf(clientProp, "Client" + count)
+    val client = system.actorOf(clientProp)
     clients += client
     
     client ! StartClient(manager)
   }
   
+  def workerJoin(workerProp: Props) = {
+    val worker = system.actorOf(workerProp) 
+    workers += worker
+    
+    worker ! StartWorker(manager)
+  }
+  
 }
 
 object SingleManagerSystem {
-  def apply(systemName: String, workerCount: Int) = new SingleManagerSystem(systemName, workerCount)
+  def apply(systemName: String) = new SingleManagerSystem(systemName)
+  def apply(systemName: String, workerCount: Int) = {
+    val s = new SingleManagerSystem(systemName)
+    (1 to workerCount).foreach(n => s.workerJoin(Worker.props))
+    s
+  }
 }

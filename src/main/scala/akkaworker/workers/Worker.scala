@@ -10,12 +10,12 @@ import akkaworker.workers.Status._
 import akka.actor.ActorLogging
 
 object Worker {
-  def props(manager: ActorRef): Props = Props(new Worker(manager))
+  def props: Props = Props(new Worker)
 }
 
-class Worker(val manager: ActorRef) extends Actor 
+class Worker extends Actor 
                                     with ActorLogging {
-  manager ! JoinWorker
+  var manager: ActorRef = null 
   
   def sayJobFinished(id: Long, result: Option[Any]) = context.self ! TaskFinished(id, result)
   
@@ -37,6 +37,13 @@ class Worker(val manager: ActorRef) extends Actor
   def receive = notConnected 
   
   def notConnected: Receive = {
+    case StartWorker(mgr: ActorRef) => {
+      if (mgr eq null) log.error("Manager conntected to should not be null!")
+      else {
+        manager = mgr 
+        manager ! JoinWorker 
+      }
+    }
     case Welcome => askManagerForTask
   }
   
