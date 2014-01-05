@@ -10,6 +10,8 @@ tmp/
 *.bak
 *.swp
 *~.nib
+.classpath
+.project
 local.properties
 .settings/
 .loadpath
@@ -214,3 +216,4 @@ pip-log.txt
 target/
 submission/
 lib_managed/
+
