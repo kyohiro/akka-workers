@@ -7,8 +7,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.ShouldMatchers
 import akka.testkit.ImplicitSender
 import akka.testkit.TestProbe
-import akkaworker.workers.Protocol._
-import akkaworker.workers.Manager
+import akkaworker.actors.Protocol._
+import akkaworker.actors.Manager
 import scala.language.postfixOps
 import scala.concurrent.duration._
 

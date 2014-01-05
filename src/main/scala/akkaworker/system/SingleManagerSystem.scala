@@ -1,8 +1,8 @@
 package akkaworker.system
 
 import akka.actor.{ActorRef, Props}
-import akkaworker.workers.{Manager, Worker}
-import akkaworker.workers.Protocol._
+import akkaworker.actors.{Manager, Worker}
+import akkaworker.actors.Protocol._
 
 class SingleManagerSystem(val systemName: String) extends WorkingSystem {
   

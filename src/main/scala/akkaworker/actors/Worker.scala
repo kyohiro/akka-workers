@@ -1,9 +1,9 @@
-package akkaworker.workers
+package akkaworker.actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits._
-import akkaworker.workers.Protocol._
+import akkaworker.actors.Protocol._
 
 object Worker {
   def props: Props = Props(new Worker)

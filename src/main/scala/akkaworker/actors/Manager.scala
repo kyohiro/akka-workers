@@ -1,9 +1,11 @@
-package akkaworker.workers
+package akkaworker.actors
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import scala.collection.mutable
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import akkaworker.task.Task
-import akkaworker.workers.Protocol.
-_
+import akkaworker.actors.Protocol._
+
+
 object Manager {
   case class TaskSeq(seq: Long, task: Task, client: ActorRef)
   def props: Props = Props(new Manager)
@@ -14,25 +16,33 @@ class Manager extends Actor
               with SeqGenerator {
   import Manager._
   
-  var workers = Set.empty[ActorRef] 
+  //Mutable collections for workers and clients status connected to this manager
+  val workers = mutable.HashSet.empty[ActorRef] 
+  val clientsStatus = mutable.HashMap.empty[ActorRef, Boolean] 
+  
+  //Tasks status, task sequence here is unique within this manager, it's different from the task's id
   val newTasks = scala.collection.mutable.Queue.empty[TaskSeq]
   val tasksMap = scala.collection.mutable.HashMap.empty[Long, TaskSeq]
   
-  def enqueTask(task: Task) = {
+  //To know if the client(s) has finished all tasks
+  private[this] def clientCompleted(client: ActorRef) = clientsStatus.getOrElse(client, false)
+  private[this] def allClientsCompleted = clientsStatus.forall(_._2 == true) 
+  
+  private[this] def enqueTask(task: Task) = {
     val seq = nextSeq
     val taskSeq = TaskSeq(seq, task, sender)
     tasksMap += seq -> taskSeq
     newTasks += taskSeq
   }
   
-  def getFirstTask: Option[TaskSeq] = if (newTasks.isEmpty) None else Some(newTasks.dequeue)
+  private[this] def getFirstTask: Option[TaskSeq] = if (newTasks.isEmpty) None else Some(newTasks.dequeue)
   
-  def assignOneTask(worker: ActorRef) = getFirstTask match {
+  private[this] def assignOneTask(worker: ActorRef) = getFirstTask match {
     case Some(task) => worker ! AssignTask(task.seq, task.task); log.debug("Assigned task {} to {}", task.seq, worker)
     case None => worker ! NoTaskAvailable
   }
   
-  def tellTaskAvail = if (!newTasks.isEmpty) sender ! TaskAvailable
+  private[this] def tellTaskAvail = if (!newTasks.isEmpty) sender ! TaskAvailable
  
   def receive = normal 
   
@@ -77,13 +87,21 @@ class Manager extends Actor
     }
                                      
     case JoinWorker => {
-      workers += sender
+      workers.add(sender) 
+      context.watch(sender)
       sender ! Welcome
     }
-    case JoinClient => sender ! Welcome
+    case JoinClient => {
+      clientsStatus.put(sender, false)
+      context.watch(sender)
+      sender ! Welcome
+    }
+    
+    case Terminated(actor) => {
+      if (clientsStatus.contains(actor)) clientsStatus.update(actor, true)
+      else workers.remove(actor)
+    }
   }
-  
-  var cnt = 0
 }
 
 trait SeqGenerator {

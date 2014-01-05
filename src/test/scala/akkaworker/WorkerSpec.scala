@@ -2,19 +2,16 @@ package akkaworker
 
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
-
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
-
 import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import akkaworker.workers.Manager
-import akkaworker.workers.Protocol._
-import akkaworker.workers.Worker
-
+import akkaworker.actors.Manager
+import akkaworker.actors.Protocol._
+import akkaworker.actors.Worker
 
 class WorkerSpec extends TestKit(ActorSystem("WorkerSpec")) 
                  with FunSuite
@@ -22,7 +19,8 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
                  with ShouldMatchers
                  with ImplicitSender 
                  with Tools {
-
+  
+  
   override def afterAll(): Unit = system.shutdown()
   
   test("Worker should receive tasks from manager") {

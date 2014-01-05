@@ -1,4 +1,4 @@
-package akkaworker.workers
+package akkaworker.actors
 
 import akka.actor.{Actor, ActorRef, PoisonPill, ActorLogging}
 import akkaworker.task.Task
@@ -70,7 +70,6 @@ trait SingleBatchTaskClient extends Client {
   def allTasksDone = if (tasksSet.isEmpty) {
     tasksComplete 
     log.info("All tasks has been finished. Closing this Client.")
-    manager ! GoodBye
     self ! PoisonPill
   }
   

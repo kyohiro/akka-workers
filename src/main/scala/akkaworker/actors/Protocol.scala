@@ -1,4 +1,4 @@
-package akkaworker.workers
+package akkaworker.actors
 
 import akkaworker.task.Task
 import akka.actor.ActorRef

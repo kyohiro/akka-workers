@@ -8,7 +8,7 @@ import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import akkaworker.workers.Protocol._
+import akkaworker.actors.Protocol._
 
 class ClientSpec extends TestKit(ActorSystem("ClientSpec")) 
                  with FunSuite
@@ -35,18 +35,6 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
     manager.expectMsg(JoinClient)
     manager.send(client, Welcome)
     manager.expectMsgClass(classOf[RaiseBatchTask])
-  }
-  
-  test("Client should quit gracefully after receiving all results") {
-    val manager = TestProbe()
-    val client = system.actorOf(SomeClient.props, "someclient")
-    client ! StartClient(manager.ref)
-    manager.expectMsg(JoinClient)
-    manager.send(client, Welcome)
-    manager.expectMsgClass(classOf[RaiseBatchTask])
-    
-    (1 to 10).map(id => manager.send(client, TaskComplete(id, None)))
-    manager.expectMsg(GoodBye)
   }
   
 }

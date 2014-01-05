@@ -3,14 +3,14 @@ package akkaworker
 import scala.concurrent._
 import akkaworker.task.Task
 import ExecutionContext.Implicits.global
-import akkaworker.workers.Client
+import akkaworker.actors.Client
 import akka.actor.ActorRef
 import akka.actor.Props
-import akkaworker.workers.SingleBatchTaskClient
+import akkaworker.actors.SingleBatchTaskClient
 import akka.actor.ActorLogging
 import scala.actors.PoisonPill
-import akkaworker.workers.SeqGenerator
-import akkaworker.workers.Worker
+import akkaworker.actors.SeqGenerator
+import akkaworker.actors.Worker
 import scala.annotation.tailrec
 
 trait Tools extends SeqGenerator{
