@@ -2,6 +2,7 @@ package akkaworker.actors
 
 import akka.actor.{Actor, ActorRef, PoisonPill, ActorLogging}
 import akkaworker.task.Task
+import scala.concurrent.Future
 
 /**
  * Client will send tasks to the manager and wait for results. 
@@ -21,6 +22,8 @@ trait Client extends Actor
   
   //to be implemented
   def tasksComplete: Unit
+  
+  def whenAllTasksDone: Future[Any] = ???
   
   var manager: ActorRef = null
   
