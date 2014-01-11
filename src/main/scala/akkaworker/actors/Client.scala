@@ -2,7 +2,8 @@ package akkaworker.actors
 
 import akka.actor.{Actor, ActorRef, PoisonPill, ActorLogging}
 import akkaworker.task.Task
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
+import scala.concurrent.ExecutionContext.Implicits._
 
 /**
  * Client will send tasks to the manager and wait for results. 
@@ -19,11 +20,6 @@ trait Client extends Actor
   
   //to be implemented
   def processFailure(tf: TaskFailed): Unit
-  
-  //to be implemented
-  def tasksComplete: Unit
-  
-  def whenAllTasksDone: Future[Any] = ???
   
   var manager: ActorRef = null
   
@@ -59,31 +55,36 @@ trait SingleBatchTaskClient extends Client {
   import Protocol._
   
   //to be implemented
-  def produceTasks: Iterable[Task]
+  def produceTasks: Iterable[Task]  
+  
+  val promise = Promise[Iterable[Option[Any]]]
+  val tasksDone = promise.future 
   
   val tasksSet = scala.collection.mutable.Set.empty[Long]
   var results = Map.empty[Long, Option[Any]] 
   
-  def dispatchTasks = {
+  def whenAllTasksFinish[T](callback: Iterable[Option[Any]] => T) = tasksDone.onSuccess{case results => callback(results)}
+    
+  override def dispatchTasks = {
     val tasks = produceTasks
     tasks.map(tasksSet += _.id)
     manager ! RaiseBatchTask(tasks)
   }
   
-  def allTasksDone = if (tasksSet.isEmpty) {
-    tasksComplete 
-    log.info("All tasks has been finished. Closing this Client.")
-    self ! PoisonPill
-  }
-  
-  def processResult(tf: TaskComplete) = {
+  override def processResult(tf: TaskComplete) = {
     results += tf.id -> tf.result
     tasksSet -= tf.id
     allTasksDone 
   }
   
-  def processFailure(tf: TaskFailed) = {
+  override def processFailure(tf: TaskFailed) = {
     tasksSet -= tf.seq
     allTasksDone
+  }
+  
+  def allTasksDone = if (tasksSet.isEmpty) {
+    promise.success(results.values)
+    log.info("All tasks has been finished. Closing this Client.")
+    self ! PoisonPill
   }
 }
