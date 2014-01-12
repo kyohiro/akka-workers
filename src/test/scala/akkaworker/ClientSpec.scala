@@ -37,4 +37,19 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
     manager.expectMsgClass(classOf[RaiseBatchTask])
   }
   
+  test("Single batch client should handle registered callback when all tasks are done") {
+    val manager = TestProbe()
+    var ret = List.empty[Option[Any]]
+    val client = system.actorOf(SomeClient.props(results => ret = results.toList))
+    client ! StartClient(manager.ref)
+    manager.expectMsg(JoinClient)
+    manager.send(client, Welcome)
+    manager.expectMsgClass(classOf[RaiseBatchTask]) 
+    
+    (1 to 10).foreach(n => manager.send(client, TaskComplete(n, Some(n)))) 
+    
+    Thread.sleep(1000)
+    ret.size should be (10)
+  }
+  
 }

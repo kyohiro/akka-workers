@@ -38,6 +38,10 @@ class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task {
 
 object SomeClient {
   def props: Props = Props(new SomeClient)
+  def props[T](callback: Iterable[Option[Any]] => T) = Props({val s = new SomeClient
+    s.whenAllTasksFinish(callback)
+    s})
+  
 }
 
 class SomeClient extends SingleBatchTaskClient with Tools { 
