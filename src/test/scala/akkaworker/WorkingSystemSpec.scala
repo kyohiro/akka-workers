@@ -15,7 +15,7 @@ class WorkingSystemSpec extends FunSuite
     Thread.sleep(2500)
     system.allCompleted should be (true)
     
-    val client2 = new MillionsTaskClient("Million client 2")
+    val client2 = new FailureTaskClient("Failure client 2")
     system.clientJoin(client2)
     system.allCompleted should be (false)
     
