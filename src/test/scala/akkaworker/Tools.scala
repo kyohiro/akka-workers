@@ -6,11 +6,11 @@ import ExecutionContext.Implicits.global
 import akkaworker.actors.Client
 import akka.actor.ActorRef
 import akka.actor.Props
-import akkaworker.actors.SingleBatchTaskClient
 import akka.actor.ActorLogging
 import scala.actors.PoisonPill
-import akkaworker.actors.SeqGenerator
+import akkaworker.util.SeqGenerator
 import akkaworker.actors.Worker
+import akkaworker.actors.BatchClient
 import scala.annotation.tailrec
 
 trait Tools extends SeqGenerator{
@@ -35,41 +35,15 @@ class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task {
   }
 }
 
-
-object SomeClient {
-  def props: Props = Props(new SomeClient)
-  def props[T](callback: Iterable[Option[Any]] => T) = Props({val s = new SomeClient
-    s.whenAllTasksFinish(callback)
-    s})
-  
-}
-
-class SomeClient extends SingleBatchTaskClient with Tools { 
+class SomeClient(val name: String) extends BatchClient with Tools { 
   def produceTasks = getRandomTasks(10L) 
-  def tasksComplete = {
-    log.info("All tasks have been completed.")
-  } 
 }
 
-object MillionsTaskClient {
-  def props: Props = Props(new MillionsTaskClient)
-}
-
-class MillionsTaskClient extends SingleBatchTaskClient with Tools {
+class MillionsTaskClient(val name: String) extends BatchClient with Tools {
   def produceTasks = getRandomTasks(5000L, timeLimit = 100) 
-  def tasksComplete = {
-    log.info("All tasks have been completed.")
-  }
 }
 
-object FailureTaskClient {
-  def props(manager: ActorRef): Props = Props(new FailureTaskClient)
-}
-
-class FailureTaskClient extends SingleBatchTaskClient with Tools {
+class FailureTaskClient(val name: String) extends BatchClient with Tools {
   def produceTasks = getRandomTasks(100L, timeLimit = 100, failRate = 100)
-  def tasksComplete = {
-    log.info("All tasks have been completed.")
-  }
 }
 

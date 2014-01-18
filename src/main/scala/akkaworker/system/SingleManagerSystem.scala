@@ -1,24 +1,32 @@
 package akkaworker.system
 
+import scala.collection.mutable
 import akka.actor.{ActorRef, Props}
 import akkaworker.actors.{Manager, Worker}
 import akkaworker.actors.Protocol._
+import akkaworker.actors.Client
+import akka.actor.TypedActor
+import akka.actor.TypedProps
+import scala.concurrent.impl.Future
+import scala.concurrent.Future
 
 class SingleManagerSystem(val systemName: String) extends WorkingSystem {
   
   val manager = system.actorOf(Manager.props, "Manager")
   
-  def clientJoin(clientProp: Props) = {
-    val client = system.actorOf(clientProp)
-    clients += client
+  val allFutures = mutable.Set.empty[Future[Traversable[Option[Any]]]]
+  
+  def clientJoin(client: Client) = {
+    val clientActor = TypedActor(system).typedActorOf(TypedProps(classOf[Client], client)) 
+    clients += clientActor
+    allFutures += client.allTasksComplete
     
-    client ! StartClient(manager)
+    clientActor.joinManager(manager)
   }
   
   def workerJoin(workerProp: Props) = {
     val worker = system.actorOf(workerProp) 
     workers += worker
-    
     worker ! StartWorker(manager)
   }
   

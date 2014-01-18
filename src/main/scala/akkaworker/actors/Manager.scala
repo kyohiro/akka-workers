@@ -4,6 +4,7 @@ import scala.collection.mutable
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import akkaworker.task.Task
 import akkaworker.actors.Protocol._
+import akkaworker.util.SeqGenerator
 
 
 object Manager {
@@ -28,9 +29,9 @@ class Manager extends Actor
   private[this] def clientCompleted(client: ActorRef) = clientsStatus.getOrElse(client, false)
   private[this] def allClientsCompleted = clientsStatus.forall(_._2 == true) 
   
-  private[this] def enqueTask(task: Task) = {
+  private[this] def enqueTask(task: Task, client: ActorRef) = {
     val seq = nextSeq
-    val taskSeq = TaskSeq(seq, task, sender)
+    val taskSeq = TaskSeq(seq, task, client)
     tasksMap += seq -> taskSeq
     newTasks += taskSeq
   }
@@ -47,16 +48,16 @@ class Manager extends Actor
   def receive = normal 
   
   val normal: Receive = {
-    case RaiseTask(task) => {
-      enqueTask(task) 
+    case RaiseTask(task, client: ActorRef) => {
+      enqueTask(task, client) 
       workers.map(_ ! TaskAvailable)
       
       log.info("Got task {} from Client {}, totally {} tasks inbox now.", task, sender, newTasks.size)
       log.info("Broadcast Task Available message")
     }
     
-    case RaiseBatchTask(tasks) => {
-      tasks.map(enqueTask(_))
+    case RaiseBatchTask(tasks, client: ActorRef) => {
+      tasks.map(enqueTask(_, client))
       workers.map(_ ! TaskAvailable)
       
       log.info("Got {} tasks from Client {}, totally {} tasks inbox now.", tasks.size, sender, newTasks.size)
@@ -72,10 +73,10 @@ class Manager extends Actor
       tellTaskAvail
     }
     
-    case TaskFailed(seq: Long) => {
+    case TaskFailed(seq, ex) => {
       val taskSeq = tasksMap.get(seq) 
       tasksMap -= seq
-      taskSeq.map(ts => ts.client ! TaskFailed(ts.task.id))
+      taskSeq.map(ts => ts.client ! TaskFailed(ts.task.id, ex))
       log.debug(s"$sender failed task $seq")
        
       tellTaskAvail
@@ -101,16 +102,5 @@ class Manager extends Actor
       if (clientsStatus.contains(actor)) clientsStatus.update(actor, true)
       else workers.remove(actor)
     }
-  }
-}
-
-trait SeqGenerator {
-  var _seqCounter = 0L
-  
-  def curSeq =  _seqCounter
-  
-  def nextSeq = {
-    _seqCounter += 1 
-    _seqCounter
   }
 }

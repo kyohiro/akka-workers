@@ -3,12 +3,18 @@ package akkaworker
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
-
 import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
 import akkaworker.actors.Protocol._
+import akka.actor.TypedActor
+import akka.actor.TypedProps
+import akkaworker.actors.Client
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.language.postfixOps._
+import akka.util.Timeout
 
 class ClientSpec extends TestKit(ActorSystem("ClientSpec")) 
                  with FunSuite
@@ -30,26 +36,23 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
   
   test("Manager should receive the tasks from Client") {
     val manager = TestProbe()
-    val client = system.actorOf(SomeClient.props)
-    client ! StartClient(manager.ref)
-    manager.expectMsg(JoinClient)
-    manager.send(client, Welcome)
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new SomeClient("client")))
+    client.joinManager(manager.ref)
     manager.expectMsgClass(classOf[RaiseBatchTask])
   }
   
-  test("Single batch client should handle registered callback when all tasks are done") {
+  test("Client future should tell when the task is completed and return results") {
     val manager = TestProbe()
     var ret = List.empty[Option[Any]]
-    val client = system.actorOf(SomeClient.props(results => ret = results.toList))
-    client ! StartClient(manager.ref)
-    manager.expectMsg(JoinClient)
-    manager.send(client, Welcome)
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new SomeClient("client")))
+    val fut = client.allTasksComplete
+    
+    client.joinManager(manager.ref)
     manager.expectMsgClass(classOf[RaiseBatchTask]) 
     
-    (1 to 10).foreach(n => manager.send(client, TaskComplete(n, Some(n)))) 
-    
-    Thread.sleep(1000)
-    ret.size should be (10)
+    (1 to 10).foreach(n => client.onReceive(TaskComplete(n, Some(n)), manager.ref))
+     
+    Await.result(fut, 5 seconds).asInstanceOf[Traversable[Option[Any]]].size should be (10)
   }
   
 }

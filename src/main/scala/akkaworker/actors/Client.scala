@@ -1,48 +1,49 @@
 package akkaworker.actors
 
-import akka.actor.{Actor, ActorRef, PoisonPill, ActorLogging}
-import akkaworker.task.Task
-import scala.concurrent.{Future, Promise}
-
+import scala.collection.mutable
+import scala.concurrent.Future
+import akka.actor.ActorRef
+import akka.actor.TypedActor.Receiver
 
 /**
  * Client will send tasks to the manager and wait for results. 
  */
-trait Client extends Actor 
-             with ActorLogging {
+trait Client extends Receiver { 
   import Protocol._
   
-  //to be implemented
+  /** Client name */
+  def name: String
+  
+  /** Tasks Set for keeping all task Id */ 
+  def tasksSet: mutable.HashSet[Long]
+  
+  /** Results back from manager */
+  def results: mutable.Map[Long, Option[Any]] 
+  
+  /** Failed task id */
+  def failures: mutable.Map[Long, Throwable] 
+  
+  def joinManager(manager: ActorRef): Unit
+  
+  /** Dispatch all the tasks to the manager */
   def dispatchTasks: Unit
   
-  //to be implemented
+  /** Define how to process successful results */
   def processResult(tf: TaskComplete): Unit
   
-  //to be implemented
+  /** Define how to process failures */
   def processFailure(tf: TaskFailed): Unit
   
-  var manager: ActorRef = null
+  /** Check how are all tasks going */
+  def checkTasksStatus: Unit
   
-  //Starting in not connected status
-  def receive = notConnected
+  /** The future when all tasks have completed (succeeded or failed) */
+  def allTasksComplete: Future[Traversable[Option[Any]]]
   
-  def notConnected: Receive = {
-    case StartClient(mgr: ActorRef) => {
-      if (mgr eq null) log.error("Manager conntected to should not be null!")
-      else {
-        manager = mgr 
-        manager !  JoinClient
-      }
-    }
-    //Dispatch tasks and wait for responses
-    case Welcome => {
-      dispatchTasks
-      context.become(tasksSent)
-    }
-  }
-  
-  def tasksSent: Receive = {
-    case tc: TaskComplete => processResult(tc)  
+  /** Handles manager's feedback */
+  def onReceive(message: Any, sender: ActorRef) = message match {
+    case tc :TaskComplete => processResult(tc)
     case tf: TaskFailed => processFailure(tf)
   }
 }
+

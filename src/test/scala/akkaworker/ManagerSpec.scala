@@ -11,6 +11,9 @@ import akkaworker.actors.Protocol._
 import akkaworker.actors.Manager
 import scala.language.postfixOps
 import scala.concurrent.duration._
+import akka.actor.TypedActor
+import akka.actor.TypedProps
+import akkaworker.actors.Client
 
 class ManagerSpec extends TestKit(ActorSystem("ManagerSpec")) 
                  with FunSuite
@@ -21,22 +24,16 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
   override def afterAll(): Unit = system.shutdown()
   
   test("Manager should answer Join") {
-    val client = TestProbe()
     val worker = TestProbe()
-    
     val manager = system.actorOf(Manager.props)
-    client.send(manager, JoinClient)
     worker.send(manager, JoinWorker)
-    
-    client.expectMsg(Welcome)
     worker.expectMsg(Welcome)
   }
   
   test("Manager should send tasks to workers when they have tasks") {
     val manager = system.actorOf(Manager.props) 
-    val client = system.actorOf(SomeClient.props) 
-    
-    client ! StartClient(manager)
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new SomeClient("client")))    
+    client.joinManager(manager)
     Thread.sleep(200)
     
     val worker = TestProbe()
@@ -50,7 +47,7 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
   }
   
   test("Manager should tell workers task available when clients join") {
-    val manager = system.actorOf(Manager.props) 
+    val manager = system.actorOf(Manager.props, "manager3") 
     
     val worker = TestProbe()
     worker.send(manager, JoinWorker)
@@ -58,8 +55,8 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
     
     worker.expectNoMsg(1 second)
    
-    val client = system.actorOf(SomeClient.props) 
-    client ! StartClient(manager)
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new SomeClient("client")))    
+    client.joinManager(manager)
     
     worker.expectMsg(TaskAvailable)
     worker.reply(AskForTask)

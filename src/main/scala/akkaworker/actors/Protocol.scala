@@ -17,10 +17,10 @@ object Protocol {
   sealed trait OperationReply
   case class StartClient(manager: ActorRef) extends Operation                       //Tell client which manager to connect to
   case class StartWorker(manager: ActorRef) extends Operation                       //Tell worker which manager to connect to
-  case class RaiseTask(task: Task) extends Operation                                //Client raise task to Manager
-  case class RaiseBatchTask(tasks: Iterable[Task]) extends Operation                //Client raise a batch of tasks
+  case class RaiseTask(task: Task, client: ActorRef) extends Operation                                //Client raise task to Manager
+  case class RaiseBatchTask(tasks: Traversable[Task], client: ActorRef) extends Operation             //Client raise a batch of tasks
   case class AssignTask(seq: Long, task: Task) extends Operation                    //Manager assign task to a worker
   case class TaskFinished(seq: Long, result: Option[Any]) extends OperationReply    //Worker says task has been finished
   case class TaskComplete(id: Long, result: Option[Any]) extends OperationReply     //Manager tells client task has been finished
-  case class TaskFailed(seq: Long) extends OperationReply                           //Worker tells manager the failure of task
+  case class TaskFailed(seq: Long, result: Throwable) extends OperationReply      //Worker tells manager the failure of task
 }

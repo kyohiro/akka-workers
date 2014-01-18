@@ -9,17 +9,17 @@ class WorkingSystemSpec extends FunSuite
                         with Tools {
   test("Working system should start and welcome clients correctly") {
     val system = SingleManagerSystem("TestSystem", 256)
-    val client1 = MillionsTaskClient.props
+    val client1 = new MillionsTaskClient("Million client 1")
     system.clientJoin(client1)
     
     Thread.sleep(2500)
-    system.allClientsClosed should be (true)
+    system.allCompleted should be (true)
     
-    val client2 = MillionsTaskClient.props
+    val client2 = new MillionsTaskClient("Million client 2")
     system.clientJoin(client2)
-    system.allClientsClosed should be (false)
+    system.allCompleted should be (false)
     
     Thread.sleep(2500)
-    system.allClientsClosed should be (true)
+    system.allCompleted should be (true)
   }
 }

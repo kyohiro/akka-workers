@@ -26,7 +26,7 @@ class Worker extends Actor
     val f = assignedTask.task.workOnTask 
     f onSuccess { case x => sayJobFinished(assignedTask.seq, x) } 
     f onFailure { case x => log.warning(x.getStackTraceString)
-                            manager ! TaskFailed(assignedTask.seq) } 
+                            manager ! TaskFailed(assignedTask.seq, x) } 
   }
   
   //starting in not connected status
