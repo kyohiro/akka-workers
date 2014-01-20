@@ -12,6 +12,11 @@ import scala.concurrent.Future
 
 class SingleManagerSystem(val systemName: String) extends WorkingSystem {
   
+  def this(systemName:String, initialWorkers: Int) = {
+    this(systemName)
+    (1 to initialWorkers).foreach(n => workerJoin(Worker.props))
+  }
+  
   val manager = system.actorOf(Manager.props, "Manager")
   
   val allFutures = mutable.Set.empty[Future[Traversable[Option[Any]]]]
@@ -34,9 +39,5 @@ class SingleManagerSystem(val systemName: String) extends WorkingSystem {
 
 object SingleManagerSystem {
   def apply(systemName: String) = new SingleManagerSystem(systemName)
-  def apply(systemName: String, workerCount: Int) = {
-    val s = new SingleManagerSystem(systemName)
-    (1 to workerCount).foreach(n => s.workerJoin(Worker.props))
-    s
-  }
+  def apply(systemName: String, workerCount: Int) = new SingleManagerSystem(systemName, workerCount)
 }
