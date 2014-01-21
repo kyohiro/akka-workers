@@ -4,11 +4,14 @@ import scala.concurrent.Future
 
 trait Task extends Serializable {
   
+  /** Type of the return value of task */
+  type T
+  
   /** A Task should have any unique id within tasks from the same client */
   val id: Long  
   
   /** Future for some thread blocking work */
-  def workOnTask: Future[Option[Any]]  
+  def workOnTask: Future[Option[T]]  
   
   override def hashCode = id.toInt 
   

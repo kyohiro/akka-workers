@@ -18,12 +18,12 @@ trait BatchClient extends Client with NoTolerance {
   def produceTasks: Traversable[Task]  
   
   /** Promise and future for the overall status of client */
-  val promise = Promise[Traversable[Option[Any]]]
+  val promise = Promise[Traversable[Option[T]]]
   def allTasksComplete = promise.future
   
   /** Tasks status fields */
   val tasksSet = mutable.HashSet.empty[Long]
-  val results = mutable.HashMap.empty[Long, Option[Any]] 
+  val results = mutable.HashMap.empty[Long, Option[T]] 
   val failures = mutable.HashMap.empty[Long, Throwable]
   
   def joinManager(manager: ActorRef) = {

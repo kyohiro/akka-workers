@@ -22,6 +22,7 @@ object SomeTask {
 }
 
 class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task {
+  type T = Int
   @tailrec
   private def calc(n: Int, acc: Int): Int = if (n == 0) 1 else calc(n-1, acc+1)
   def workOnTask = {

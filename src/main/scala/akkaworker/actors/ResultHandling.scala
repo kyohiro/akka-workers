@@ -4,13 +4,12 @@ import akkaworker.actors.Protocol._
 import scala.concurrent.Promise
 
 /** Defines whether and how a client handles failed tasks */
-trait ResultHandling {
-  this: Client =>
+trait ResultHandling extends Client {
     
-  val promise: Promise[Traversable[Option[Any]]]
+  val promise: Promise[Traversable[Option[T]]]
   
   /** Remove from tasks set, add to results map */
-  def processResult(tf: TaskComplete) = {
+  def processResult(tf: TaskComplete[T]) = {
     tasksSet -= tf.id
     results += tf.id -> tf.result
     checkTasksStatus

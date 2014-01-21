@@ -11,6 +11,9 @@ import akka.actor.TypedActor.Receiver
 trait Client extends Receiver { 
   import Protocol._
   
+  /** Type of the results of tasks */
+  type T
+  
   /** Client name */
   def name: String
   
@@ -18,7 +21,7 @@ trait Client extends Receiver {
   def tasksSet: mutable.HashSet[Long]
   
   /** Results back from manager */
-  def results: mutable.Map[Long, Option[Any]] 
+  def results: mutable.Map[Long, Option[T]] 
   
   /** Failed task id */
   def failures: mutable.Map[Long, Throwable] 
@@ -29,7 +32,7 @@ trait Client extends Receiver {
   def dispatchTasks: Unit
   
   /** Define how to process successful results */
-  def processResult(tf: TaskComplete): Unit
+  def processResult(tf: TaskComplete[T]): Unit
   
   /** Define how to process failures */
   def processFailure(tf: TaskFailed): Unit
@@ -42,7 +45,7 @@ trait Client extends Receiver {
   
   /** Handles manager's feedback */
   def onReceive(message: Any, sender: ActorRef) = message match {
-    case tc :TaskComplete => processResult(tc)
+    case tc :TaskComplete[T] => processResult(tc)
     case tf: TaskFailed => processFailure(tf)
   }
 }

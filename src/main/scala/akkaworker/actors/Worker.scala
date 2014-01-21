@@ -54,7 +54,7 @@ class Worker extends Actor
   } 
    
   def working: Receive = {
-    case tf: TaskFinished => {
+    case tf: TaskFinished[_] => {
       manager ! tf
       context.become(waitingForTask)
     }
