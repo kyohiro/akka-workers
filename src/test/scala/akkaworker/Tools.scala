@@ -36,6 +36,12 @@ class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task {
   }
 }
 
+//The type of results should match the type declaration
+class ListTask(val id: Long) extends Task {
+  type T = List[String]
+  def workOnTask = Future {Some(List.empty[String])}
+}
+
 class SomeClient(val name: String) extends BatchClient with Tools { 
   def produceTasks = getRandomTasks(10L) 
 }
