@@ -9,8 +9,7 @@ object Worker {
   def props: Props = Props(new Worker)
 }
 
-class Worker extends Actor 
-                     with ActorLogging {
+class Worker extends Actor with ActorLogging {
   var manager: ActorRef = null 
   
   def sayJobFinished(id: Long, result: Option[Any]) = context.self ! TaskFinished(id, result)
