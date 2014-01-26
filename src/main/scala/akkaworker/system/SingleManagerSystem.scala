@@ -38,6 +38,9 @@ class SingleManagerSystem(val systemName: String) extends WorkingSystem {
 }
 
 object SingleManagerSystem {
-  def apply(systemName: String) = new SingleManagerSystem(systemName)
+  val DEFAULT_WORKERS = 16
+  
+  def apply(systemName: String) = new SingleManagerSystem(systemName, DEFAULT_WORKERS)
+  
   def apply(systemName: String, workerCount: Int) = new SingleManagerSystem(systemName, workerCount)
 }
