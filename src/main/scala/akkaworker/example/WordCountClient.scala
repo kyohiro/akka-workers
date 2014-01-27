@@ -15,31 +15,33 @@ import scala.language.postfixOps
 class WordCountClient extends BatchClient with SeqGenerator {
   val name = "Word Count Client"
     
-  type T = (String, Long)
+  type T = Long 
     
-  override def produceTasks = files.map(WordCountTask(nextSeq, _)) 
+  override def produceTasks = files.flatMap(Source.fromFile(_).getLines).map(WordCountTask(nextSeq, _)) 
+  
     
   lazy val files = new File(".").listFiles().toSeq.filter(f => f.isFile && f.getName != ".cache")
-  
 }
 
 object WordCountTask {
-  def apply(id: Long, file: File) = new WordCountTask(id, file)
+  def apply(id: Long, line: String) = new WordCountTask(id, line)
 }
 
-class WordCountTask(val id: Long, val file: File) extends Task {
-  type T = (String, Long)
+class WordCountTask(val id: Long, val line: String) extends Task {
+  type T = Long
   
-  override def workOnTask = Future {Some(file.getName() -> Source.fromFile(file).getLines.map(_.size).sum.toLong)}
+  override def workOnTask = Future {Some(line.split(" ").size.toLong)}
   
 }
 
 object WordCountExample extends App {
   val client = new WordCountClient 
-  val system = SingleManagerSystem("system")
+  val system = SingleManagerSystem("system", 64)
   system.clientJoin(client)
   val fut = client.allTasksComplete
-  
   val ret = Await.result(fut, 2 seconds)
-  fut foreach println
+  
+  val allWords = ret.foldLeft(0l)((sum, x) => x.get + sum) 
+  
+  println(s"Altogether $allWords words.")
 }
