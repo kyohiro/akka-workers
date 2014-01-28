@@ -57,7 +57,5 @@ class Worker extends Actor with ActorLogging {
       manager ! tf
       context.become(waitingForTask)
     }
-    case a: Any => log.warning("unexpected message, {}", a)
-    
   } 
 }
