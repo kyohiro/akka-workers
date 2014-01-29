@@ -21,8 +21,8 @@ class SingleManagerSystem(val systemName: String) extends WorkingSystem {
   
   val allFutures = mutable.Set.empty[Future[Traversable[Option[Any]]]]
   
-  def clientJoin(client: Client) = {
-    val clientActor = TypedActor(system).typedActorOf(TypedProps(classOf[Client], client)) 
+  def clientJoin(client: Client[_]) = {
+    val clientActor = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], client)) 
     clients += clientActor
     allFutures += client.allTasksComplete
     

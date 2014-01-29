@@ -8,11 +8,8 @@ import akka.actor.TypedActor.Receiver
 /**
  * Client will send tasks to the manager and wait for results. 
  */
-trait Client extends Receiver { 
+trait Client[T] extends Receiver { 
   import Protocol._
-  
-  /** Type of the results of tasks */
-  type T
   
   /** Client name */
   def name: String

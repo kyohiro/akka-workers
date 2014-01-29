@@ -8,7 +8,7 @@ import akkaworker.util.SeqGenerator
 
 
 object Manager {
-  case class TaskSeq(seq: Long, task: Task, client: ActorRef)
+  case class TaskSeq(seq: Long, task: Task[_], client: ActorRef)
   def props: Props = Props(new Manager)
 }
 
@@ -29,7 +29,7 @@ class Manager extends Actor
   private[this] def clientCompleted(client: ActorRef) = clientsStatus.getOrElse(client, false)
   private[this] def allClientsCompleted = clientsStatus.forall(_._2 == true) 
   
-  private[this] def enqueTask(task: Task, client: ActorRef) = {
+  private[this] def enqueTask(task: Task[_], client: ActorRef) = {
     val seq = nextSeq
     val taskSeq = TaskSeq(seq, task, client)
     tasksMap += seq -> taskSeq

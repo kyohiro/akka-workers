@@ -12,7 +12,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class WordCountClient extends BatchClient with SeqGenerator {
+class WordCountClient extends BatchClient[Long] with SeqGenerator {
   val name = "Word Count Client"
     
   type T = Long 
@@ -27,7 +27,7 @@ object WordCountTask {
   def apply(id: Long, line: String) = new WordCountTask(id, line)
 }
 
-class WordCountTask(val id: Long, val line: String) extends Task {
+class WordCountTask(val id: Long, val line: String) extends Task[Long] {
   type T = Long
   
   override def workOnTask = Future {Some(line.split(" ").size.toLong)}

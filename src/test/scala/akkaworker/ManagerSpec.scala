@@ -32,7 +32,7 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
   
   test("Manager should send tasks to workers when they have tasks") {
     val manager = system.actorOf(Manager.props) 
-    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new SomeClient("client")))    
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new SomeClient("client")))    
     client.joinManager(manager)
     Thread.sleep(200)
     
@@ -55,7 +55,7 @@ class ManagerSpec extends TestKit(ActorSystem("ManagerSpec"))
     
     worker.expectNoMsg(1 second)
    
-    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new SomeClient("client")))    
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new SomeClient("client")))    
     client.joinManager(manager)
     
     worker.expectMsg(TaskAvailable)

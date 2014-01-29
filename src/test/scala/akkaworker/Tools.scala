@@ -21,7 +21,7 @@ object SomeTask {
   def apply(id: Long, timeLimit: Int, failRate: Int = 0) = new SomeTask(id, timeLimit, failRate)
 }
 
-class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task {
+class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task[Int] {
   type T = Int
   @tailrec
   private def calc(n: Int, acc: Int): Int = if (n == 0) 1 else calc(n-1, acc+1)
@@ -37,20 +37,20 @@ class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task {
 }
 
 //The type of results should match the type declaration
-class ListTask(val id: Long) extends Task {
+class ListTask(val id: Long) extends Task[List[String]] {
   type T = List[String]
   def workOnTask = Future {Some(List.empty[String])}
 }
 
-class SomeClient(val name: String) extends BatchClient with Tools { 
+class SomeClient(val name: String) extends BatchClient[Int] with Tools { 
   def produceTasks = getRandomTasks(10L) 
 }
 
-class MillionsTaskClient(val name: String) extends BatchClient with Tools {
+class MillionsTaskClient(val name: String) extends BatchClient[Int] with Tools {
   def produceTasks = getRandomTasks(5000L, timeLimit = 100) 
 }
 
-class FailureTaskClient(val name: String) extends BatchClient with Tools {
+class FailureTaskClient(val name: String) extends BatchClient[Int] with Tools {
   def produceTasks = getRandomTasks(100L, timeLimit = 100, failRate = 100)
 }
 

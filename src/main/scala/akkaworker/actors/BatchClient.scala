@@ -8,14 +8,14 @@ import akka.actor.ActorRef
 import akka.actor.TypedActor
 
 /** Batch client doesn't allow any failure */
-trait BatchClient extends Client with NoTolerance {
+trait BatchClient[T] extends Client[T] with NoTolerance[T] {
   import Protocol._
   
   /** Manager to send tasks to */
   var manager: ActorRef = null
   
   /** Produce a list of tasks, will be called by dispatchTask */ 
-  def produceTasks: Traversable[Task]  
+  def produceTasks: Traversable[Task[T]]  
   
   /** Promise and future for the overall status of client */
   val promise = Promise[Traversable[Option[T]]]

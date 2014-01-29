@@ -36,7 +36,7 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
   
   test("Manager should receive the tasks from Client") {
     val manager = TestProbe()
-    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new SomeClient("client")))
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new SomeClient("client")))
     client.joinManager(manager.ref)
     manager.expectMsgClass(classOf[RaiseBatchTask])
   }
@@ -44,7 +44,7 @@ class ClientSpec extends TestKit(ActorSystem("ClientSpec"))
   test("Client future should tell when the task is completed and return results") {
     val manager = TestProbe()
     var ret = List.empty[Option[Any]]
-    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new SomeClient("client")))
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new SomeClient("client")))
     val fut = client.allTasksComplete
     
     client.joinManager(manager.ref)

@@ -4,7 +4,7 @@ import akkaworker.actors.Protocol._
 import scala.concurrent.Promise
 
 /** Defines whether and how a client handles failed tasks */
-trait ResultHandling extends Client {
+trait ResultHandling[T] extends Client[T] {
     
   val promise: Promise[Traversable[Option[T]]]
   

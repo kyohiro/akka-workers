@@ -30,7 +30,7 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
   
   test("Worker should receive tasks from manager") {
     val manager = system.actorOf(Manager.props) 
-    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new SomeClient("client")))
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new SomeClient("client")))
     val worker1 = TestProbe()
     val worker2 = TestProbe() 
     
@@ -57,7 +57,7 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
 
   test("Workers should handles amounts of small tasks quickly") {
     val manager = system.actorOf(Manager.props) 
-    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new MillionsTaskClient("client")))    
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new MillionsTaskClient("client")))    
     client.joinManager(manager)
     val fut = client.allTasksComplete
     
@@ -69,9 +69,9 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
   
   test("Multiple clients should work with manager and workers in concert") {
     val manager = system.actorOf(Manager.props, "manager") 
-    val client1 = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new MillionsTaskClient("client")))   
-    val client2 = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new MillionsTaskClient("client")))   
-    val client3 = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new MillionsTaskClient("client")))   
+    val client1 = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new MillionsTaskClient("client")))   
+    val client2 = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new MillionsTaskClient("client")))   
+    val client3 = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new MillionsTaskClient("client")))   
     
     client1.joinManager(manager)
     client2.joinManager(manager)
@@ -92,15 +92,15 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
   
   test("Order of joining of client or worker should not matter") {
     val manager = system.actorOf(Manager.props, "manager2")
-    val client1 = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new MillionsTaskClient("client")))   
-    val client2 = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new MillionsTaskClient("client")))  
+    val client1 = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new MillionsTaskClient("client")))   
+    val client2 = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new MillionsTaskClient("client")))  
     client1.joinManager(manager)
     client2.joinManager(manager)
     
     val workers1 = (1 to 512).map(n => system.actorOf(Worker.props)).toList
     workers1.foreach(w => w ! StartWorker(manager))
     Thread.sleep(500)
-    val client3 = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new MillionsTaskClient("client")))   
+    val client3 = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new MillionsTaskClient("client")))   
     client3.joinManager(manager)
     
     val fut1 = client1.allTasksComplete
@@ -114,7 +114,7 @@ class WorkerSpec extends TestKit(ActorSystem("WorkerSpec"))
   
   test("Worker should respond task failure to client correctly") {
     val manager = system.actorOf(Manager.props, "manager3")
-    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client], new FailureTaskClient("Failure Client")))   
+    val client = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], new FailureTaskClient("Failure Client")))   
     client.joinManager(manager)
     val fut = client.allTasksComplete
     

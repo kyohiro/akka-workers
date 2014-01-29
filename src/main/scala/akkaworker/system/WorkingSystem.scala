@@ -12,12 +12,12 @@ trait WorkingSystem {
   
   var workers = Set.empty[ActorRef]
   
-  var clients = Set.empty[Client]
+  var clients = Set.empty[Client[_]]
   
   val allFutures: Iterable[Future[Traversable[Option[Any]]]]
   
   //to be implemented
-  def clientJoin(client: Client)
+  def clientJoin(client: Client[_])
   
   //to be implemented
   def workerJoin(workerProp: Props)
