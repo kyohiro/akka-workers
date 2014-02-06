@@ -6,7 +6,7 @@ import scala.concurrent.Promise
 /** Defines whether and how a client handles failed tasks */
 trait ResultHandling[T] extends Client[T] {
     
-  val promise: Promise[Traversable[Option[T]]]
+  val promise: Promise[Traversable[T]]
   
   /** Remove from tasks set, add to results map */
   def processResult(tf: TaskComplete[T]) = {

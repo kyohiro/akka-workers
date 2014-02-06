@@ -1,7 +1,7 @@
 package akkaworker
 
 import scala.concurrent._
-import akkaworker.task.Task
+import akkaworker.task.SeqTask
 import ExecutionContext.Implicits.global
 import akkaworker.actors.Client
 import akka.actor.ActorRef
@@ -21,36 +21,36 @@ object SomeTask {
   def apply(id: Long, timeLimit: Int, failRate: Int = 0) = new SomeTask(id, timeLimit, failRate)
 }
 
-class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends Task[Int] {
+class SomeTask(val id: Long, timeLimit: Int, failureRate: Int) extends SeqTask[Int] {
   type T = Int
   @tailrec
   private def calc(n: Int, acc: Int): Int = if (n == 0) 1 else calc(n-1, acc+1)
   def workOnTask = {
     val blockingTime = (Math.random() * timeLimit).toInt + 100000000
-    val p = Promise[Option[Int]]
+    val p = Promise[Int]
     val failed = Math.random() * failureRate
     val f = future {if(failed < 50) calc(blockingTime, 0) else throw new Exception("Calc failed") } 
-    f onSuccess {case x => p.success(Some(blockingTime))} 
+    f onSuccess {case x => p.success(blockingTime)} 
     f onFailure {case x => p.failure(x)}
     p.future
   }
 }
 
 //The type of results should match the type declaration
-class ListTask(val id: Long) extends Task[List[String]] {
+class ListTask(val id: Long) extends SeqTask[List[String]] {
   type T = List[String]
-  def workOnTask = Future {Some(List.empty[String])}
+  def workOnTask = Future {List.empty[String]}
 }
 
-class SomeClient(val name: String) extends BatchClient[Int] with Tools { 
+class SomeClient(override val name: String) extends BatchClient[Int] with Tools { 
   def produceTasks = getRandomTasks(10L) 
 }
 
-class MillionsTaskClient(val name: String) extends BatchClient[Int] with Tools {
+class MillionsTaskClient(override val name: String) extends BatchClient[Int] with Tools {
   def produceTasks = getRandomTasks(5000L, timeLimit = 100) 
 }
 
-class FailureTaskClient(val name: String) extends BatchClient[Int] with Tools {
+class FailureTaskClient(override val name: String) extends BatchClient[Int] with Tools {
   def produceTasks = getRandomTasks(100L, timeLimit = 100, failRate = 100)
 }
 

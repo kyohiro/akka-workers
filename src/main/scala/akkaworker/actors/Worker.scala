@@ -12,7 +12,7 @@ object Worker {
 class Worker extends Actor with ActorLogging {
   var manager: ActorRef = null 
   
-  def sayJobFinished(id: Long, result: Option[Any]) = context.self ! TaskFinished(id, result)
+  def sayJobFinished(id: Long, result: Any) = context.self ! TaskFinished(id, result)
   
   def askManagerForTask = {
     manager ! AskForTask

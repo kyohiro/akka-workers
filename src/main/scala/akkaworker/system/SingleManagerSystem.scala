@@ -19,7 +19,7 @@ class SingleManagerSystem(val systemName: String) extends WorkingSystem {
   
   val manager = system.actorOf(Manager.props, "Manager")
   
-  val allFutures = mutable.Set.empty[Future[Traversable[Option[Any]]]]
+  val allFutures = mutable.Set.empty[Future[Traversable[Any]]]
   
   def clientJoin(client: Client[_]) = {
     val clientActor = TypedActor(system).typedActorOf(TypedProps(classOf[Client[_]], client)) 

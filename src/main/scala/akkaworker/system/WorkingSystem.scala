@@ -14,12 +14,12 @@ trait WorkingSystem {
   
   var clients = Set.empty[Client[_]]
   
-  val allFutures: Iterable[Future[Traversable[Option[Any]]]]
+  val allFutures: Iterable[Future[Traversable[_]]]
   
-  //to be implemented
+  /** When a client joins the manager, to be implemented */
   def clientJoin(client: Client[_])
   
-  //to be implemented
+  /** When a worker joins the manager, to be implemented */
   def workerJoin(workerProp: Props)
   
   def shutdown = system.shutdown()
